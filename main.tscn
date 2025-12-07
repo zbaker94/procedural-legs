@@ -1,0 +1,44 @@
+[gd_scene load_steps=2 format=3 uid="uid://c1n2te115lon5"]
+
+[ext_resource type="Script" uid="uid://brvr03nxsa5nd" path="res://leg.gd" id="1_ig7tw"]
+
+[node name="Main" type="Node"]
+
+[node name="CharacterRoot" type="Node2D" parent="."]
+position = Vector2(500, 250)
+
+[node name="Legs" type="Node2D" parent="CharacterRoot"]
+
+[node name="LLeg" type="Node2D" parent="CharacterRoot/Legs"]
+position = Vector2(-8, 0)
+script = ExtResource("1_ig7tw")
+thigh_length = 40.0
+calf_length = 30.0
+phase_offset_degrees = 180.0
+leg_extension_offset = 0.37
+hip_sway_amount = 0.53
+foot_sway_amount = 0.27
+facing_direction_degrees = 140.7
+velocity = Vector2(0, 0.32)
+debug_labels = false
+foreshorten_strength = 1.0
+bend_strength = 1.0
+
+[node name="RLeg" type="Node2D" parent="CharacterRoot/Legs"]
+position = Vector2(8, 0)
+script = ExtResource("1_ig7tw")
+thigh_length = 40.0
+calf_length = 30.0
+leg_extension_offset = 0.37
+flip_sway = true
+hip_sway_amount = 0.53
+foot_sway_amount = 0.27
+facing_direction_degrees = 140.7
+velocity = Vector2(0, 0.32)
+debug_labels = false
+foreshorten_strength = 1.0
+bend_strength = 1.0
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(506, 290)
+zoom = Vector2(3, 3)
