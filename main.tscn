@@ -13,7 +13,7 @@ position = Vector2(500, 250)
 position = Vector2(-8, 0)
 script = ExtResource("1_ig7tw")
 facing_direction_degrees = 0.0
-velocity = Vector2(0.63, 0)
+velocity = Vector2(0.5, 0.5)
 phase_offset_degrees = 180.0
 leg_extension_offset = 0.6
 
@@ -21,9 +21,8 @@ leg_extension_offset = 0.6
 position = Vector2(-16, 0)
 script = ExtResource("1_ig7tw")
 facing_direction_degrees = 0.0
-velocity = Vector2(0.63, 0)
+velocity = Vector2(0.5, 0.5)
 leg_extension_offset = 0.6
-flip_sway = true
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(506, 290)
