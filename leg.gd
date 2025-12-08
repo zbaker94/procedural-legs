@@ -13,7 +13,6 @@ extends Node2D
 @export_group("Animation Shaping")
 @export_range(0.0, 360.0, 0.01) var phase_offset_degrees: float = 0.0
 @export_range(0.1, 0.9, 0.1) var gait_factor: float = 0.4
-@export_range(0, 4.5, 0.01) var leg_extension_offset: float = 30
 
 # Foreshortening strength
 @export_subgroup("Foreshorten + Bend")
@@ -54,7 +53,7 @@ func _physics_process(_delta: float) -> void:
 	
 	# set locals
 	var total_len: float = thigh_length + calf_length
-	var max_reach: float = total_len - leg_extension_offset
+	var max_reach: float = total_len
 	
 	#print("motion counter: " + str(motion_counter_degrees))
 
@@ -81,13 +80,11 @@ func _physics_process(_delta: float) -> void:
 	foot_target = hip_position + Vector2(0, max_reach)
 	foot_target += lengthdir(forward_offset, move_rad)
 	foot_target.y += vertical_offset
-	
-	# Prevent foot target from exceeding hip y position
-	var knee_overshoot: float = thigh_length * 0.25
-	if foot_target.y <= knee_position.y - knee_overshoot:
-		foot_target.y = knee_position.y - knee_overshoot
 
-# IK triangle calculation (law of cosines)
+	var to_target = foot_target - hip_position
+	if to_target.length() > max_reach:
+		foot_target = hip_position + to_target.normalized() * (max_reach - 0.001)
+
 	
 	# IK triangle calculation (law of cosines)
 	var c_raw: float = hip_position.distance_to(foot_target)
@@ -140,7 +137,7 @@ func _draw() -> void:
 	#draw_circle(to_local(foot_position), 3.0, Color.hex(0x55aaffff))
 
 	# Target
-	#draw_circle(to_local(foot_target), 2.0, Color.hex(0xff5555ff))
+	draw_circle(to_local(foot_target), 2.0, Color.hex(0xff5555ff))
 	#draw_line(to_local(hip_position), to_local(foot_target), Color(0.3, 0.3, 0.3), 1.0)
 
 	if debug_labels:
