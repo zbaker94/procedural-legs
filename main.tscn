@@ -4,8 +4,8 @@
 
 [sub_resource type="Curve" id="Curve_ig7tw"]
 _limits = [0.0, 1.0, 0.0, 3.0]
-_data = [Vector2(0, 0), 0.0, 0.33333334, 0, 1, Vector2(3, 1), 0.33333334, 0.0, 1, 0]
-point_count = 2
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.08080809, 0.2500711), 0.86312026, 0.86312026, 0, 0, Vector2(0.7777778, 0.4661836), 0.03849767, 0.03849767, 0, 0, Vector2(1.5151515, 0.5031259), 0.09974439, 0.09974439, 0, 0, Vector2(2.4545455, 0.65828365), 0.29923263, 0.29923263, 0, 0, Vector2(3, 0.84853655), 0.34879702, 0.0, 1, 0]
+point_count = 6
 
 [node name="Main" type="Node"]
 
@@ -17,16 +17,12 @@ position = Vector2(500, 250)
 [node name="LLeg" type="Node2D" parent="CharacterRoot/Legs"]
 position = Vector2(-8, 0)
 script = ExtResource("1_ig7tw")
-facing_direction_degrees = 0.0
-velocity = Vector2(0, 1)
 phase_offset_degrees = 180.0
 stride_amplitude_curve = SubResource("Curve_ig7tw")
 
 [node name="RLeg" type="Node2D" parent="CharacterRoot/Legs"]
 position = Vector2(-16, 0)
 script = ExtResource("1_ig7tw")
-facing_direction_degrees = 0.0
-velocity = Vector2(0, 1)
 stride_amplitude_curve = SubResource("Curve_ig7tw")
 
 [node name="Camera2D" type="Camera2D" parent="."]
