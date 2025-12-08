@@ -1,0 +1,1 @@
+A port and slight extension of the procedurally animated / fake 3D leg system from the indie game NOMAD by [NOMADIC games](https://store.steampowered.com/search/?developer=NOMADIC%20games&snr=1_5_9__2000)

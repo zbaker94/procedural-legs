@@ -1,10 +1,16 @@
 extends Node2D
 
+# Facing and motion (driven by parent CharacterBody2D)
+@export_range(0.0, 360.0, 0.1) var facing_direction_degrees: float = 90.0
+@export var velocity: Vector2 = Vector2.ZERO
+
 # Lengths
+@export_group("Bone Lengths")
 @export var thigh_length: float = 20.0
 @export var calf_length: float = 15.0
 
 # Animation shaping
+@export_group("Animation Shaping")
 @export_range(0.0, 360.0, 0.01) var phase_offset_degrees: float = 0.0
 @export_range(0.1, 0.9, 0.1) var gait_factor: float = 0.4
 @export_range(0, 4.5, 0.01) var leg_extension_offset: float = 30
@@ -13,20 +19,26 @@ extends Node2D
 @export var foot_sway_amount: float = 0.4   # fraction of stride applied as lateral swing
 @export_range(0.0, 1.0, 0.05) var sway_follow_movement: float = 0.5 # blend between facing and movement when swaying
 
-@export var step_length_factor: float = 0.5  # scales stride amplitude with speed
+# Foreshortening strength
+@export_subgroup("Foreshorten/Bend")
+@export_range(0.0, 1.0, 0.05) var foreshorten_strength: float = 1.0
+# Knee bend strength
+@export var bend_strength: float = 1.0
 
-# Facing and motion (driven by parent CharacterBody2D)
-@export_range(0.0, 360.0, 0.1) var facing_direction_degrees: float = 90.0
-@export var velocity: Vector2 = Vector2.ZERO
+@export_subgroup("Stride")
+@export var auto_scale_step_length: bool = false
+@export var step_length_factor: float = 1.0 #scales stride amplitude
+@export var step_length_curve: Curve
+
+@export var auto_scale_step_height: bool = false
+@export var step_height_factor: float = 1.0  # scales vertical step height
+@export var step_height_curve: Curve
+
 
 # Debug
+@export_group("Debug")
 @export var debug_draw: bool = true
-@export var debug_labels: bool = true
-
-# Foreshortening strength
-@export_range(0.0, 1.0, 0.05) var foreshorten_strength: float = 0.75
-# Knee bend strength
-@export var bend_strength: float = 0.7
+@export var debug_labels: bool = false
 
 # Internal state (all in global space)
 var hip_position: Vector2
@@ -37,6 +49,7 @@ var foot_target: Vector2
 var leg_speed: float = 0.0
 var motion_counter_degrees: float = 0.0
 var moving_direction_radians: float = 0.0
+
 
 
 ## HELPERS
@@ -69,11 +82,21 @@ func _physics_process(_delta: float) -> void:
 	
 	## Horizontal oscillation (sine)
 	var forward_scale: float = 1.0 + leg_speed * step_length_factor
+	if auto_scale_step_length and step_length_curve:
+		# Sample curve at normalized speed (0..1)
+		var t: float = clamp(leg_speed / 200.0, 0.0, 1.0)  # adjust denominator to your max speed
+		forward_scale *= step_length_curve.sample(t)
+		
 	var forward_offset: float = stride * (total_len / 4.0) * sin(phase_rad) * forward_scale
 	forward_offset -= (leg_speed * 1.25) * 2.0
 	
 	## Vertical oscillation (cosine)
-	var vertical_offset: float = stride * (total_len / 6.0) * (-cos(phase_rad) - 1.0)
+	var height_scale: float = step_height_factor
+	if auto_scale_step_height and step_height_curve:
+		var t: float = clamp(leg_speed / 200.0, 0.0, 1.0)
+		height_scale *= step_height_curve.sample(t)
+	
+	var vertical_offset: float = stride * (total_len / 6.0) * height_scale * (-cos(phase_rad) - 1.0)
 	
 	## Apply offsets in moving direction
 	foot_target = hip_position + Vector2(0, max_reach)

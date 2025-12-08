@@ -12,33 +12,18 @@ position = Vector2(500, 250)
 [node name="LLeg" type="Node2D" parent="CharacterRoot/Legs"]
 position = Vector2(-8, 0)
 script = ExtResource("1_ig7tw")
-thigh_length = 40.06
-calf_length = 30.0
+facing_direction_degrees = 0.0
+velocity = Vector2(0.63, 0)
 phase_offset_degrees = 180.0
-leg_extension_offset = 0.37
-hip_sway_amount = 0.9
-foot_sway_amount = 3.7800000000000002
-step_length_factor = 0.85
-facing_direction_degrees = 28.2
-debug_labels = false
-foreshorten_strength = 1.0
-bend_strength = 1.0
+leg_extension_offset = 0.6
 
 [node name="RLeg" type="Node2D" parent="CharacterRoot/Legs"]
-position = Vector2(8, 0)
+position = Vector2(-16, 0)
 script = ExtResource("1_ig7tw")
-thigh_length = 40.06
-calf_length = 30.0
-leg_extension_offset = 0.37
+facing_direction_degrees = 0.0
+velocity = Vector2(0.63, 0)
+leg_extension_offset = 0.6
 flip_sway = true
-hip_sway_amount = 0.9
-foot_sway_amount = 3.7800000000000002
-step_length_factor = 0.81
-facing_direction_degrees = 68.4
-velocity = Vector2(0.57, 0)
-debug_labels = false
-foreshorten_strength = 1.0
-bend_strength = 1.0
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(506, 290)
