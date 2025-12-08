@@ -1,5 +1,36 @@
 extends Node2D
 
+# --- Constants ---
+const MOTION_COUNTER_SPEED = 5.2
+const MOTION_COUNTER_VEL_SCALE = 3.0
+const MOTION_COUNTER_EXP = 0.4
+const MOTION_COUNTER_MAX = 360.0
+
+const STRIDE_VEL_SCALE = 2.0
+const STRIDE_EXP = 0.4
+
+const FORWARD_OFFSET_DIV = 4.0
+const FORWARD_OFFSET_VEL_SCALE = 1.25
+const FORWARD_OFFSET_MULT = 2.0
+
+const VERTICAL_OFFSET_DIV = 6.0
+const VERTICAL_OFFSET_SHIFT = -1.0
+
+const TO_TARGET_EPSILON = 0.001
+
+const KNEE_VEC_MIN_LEN = 1e-6
+
+const BONE_WIDTH = 3.0
+const CALF_WIDTH = 1.5
+const HIP_RADIUS = 3.0
+const KNEE_RADIUS = 3.0
+const FOOT_RADIUS = 3.0
+const TARGET_RADIUS = 2.0
+
+var FOOT_COLOR := Color.hex(0x55aaffff)
+var TARGET_COLOR := Color.hex(0xff5555ff)
+
+
 # Facing and motion (driven by parent CharacterBody2D)
 @export_range(0.0, 360.0, 0.1) var facing_direction_degrees: float = 90.0
 @export var velocity: Vector2 = Vector2.ZERO
@@ -42,109 +73,99 @@ var moving_direction_radians: float = 0.0
 func lengthdir(length: float, angle_rad: float) -> Vector2:
 	return Vector2.RIGHT.rotated(angle_rad) * length
 
-# UPDATE LOOP
-func _physics_process(_delta: float) -> void:
-	# set globals
-	hip_position = global_position # always global
 
+# --- Main Update Loop ---
+func _physics_process(_delta: float) -> void:
+	hip_position = global_position # always global
 	leg_speed = velocity.length()
-	motion_counter_degrees += 5.2 * pow(leg_speed * 3.0, 0.4)
-	motion_counter_degrees = fmod(motion_counter_degrees, 360.0)
-	
-	# set locals
+	_update_motion_counter()
+
 	var total_len: float = thigh_length + calf_length
 	var max_reach: float = total_len
-	
-	#print("motion counter: " + str(motion_counter_degrees))
 
 	var facing_rad: float = deg_to_rad(facing_direction_degrees)
 	var move_rad: float = velocity.angle() if leg_speed > 0.001 else facing_rad
-	
-	# Foot oscillation
-	var stride: float = pow(leg_speed * 2.0, 0.4)
-	
-	# Apply phase offset to motion counter
+
+	var stride: float = _calc_stride(leg_speed)
 	var phase_rad: float = deg_to_rad(motion_counter_degrees + phase_offset_degrees)
-	
-	# Apply Secondary Animation first (in case it shifts hip etc)
-	## TODO
-	
-	## Horizontal oscillation (sine)
-	var forward_offset: float = stride * (total_len / 4.0) * sin(phase_rad)
-	forward_offset -= (leg_speed * 1.25) * 2.0
-	
-	## Vertical oscillation (cosine)
-	var vertical_offset: float = stride * (total_len / 6.0) * (-cos(phase_rad) - 1.0)
-	
-	## Apply offsets in moving direction
+
+	var forward_offset: float = _calc_forward_offset(stride, total_len, phase_rad, leg_speed)
+	var vertical_offset: float = _calc_vertical_offset(stride, total_len, phase_rad)
+
 	foot_target = hip_position + Vector2(0, max_reach)
 	foot_target += lengthdir(forward_offset, move_rad)
 	foot_target.y += vertical_offset
 
 	var to_target = foot_target - hip_position
 	if to_target.length() > max_reach:
-		foot_target = hip_position + to_target.normalized() * (max_reach - 0.001)
+		foot_target = hip_position + to_target.normalized() * (max_reach - TO_TARGET_EPSILON)
 
-	
-	# IK triangle calculation (law of cosines)
-	var c_raw: float = hip_position.distance_to(foot_target)
+	_solve_leg_ik(hip_position, foot_target, max_reach, facing_rad)
+	queue_redraw()
+
+# --- Private Calculation Helpers ---
+func _update_motion_counter() -> void:
+	motion_counter_degrees += MOTION_COUNTER_SPEED * pow(leg_speed * MOTION_COUNTER_VEL_SCALE, MOTION_COUNTER_EXP)
+	motion_counter_degrees = fmod(motion_counter_degrees, MOTION_COUNTER_MAX)
+
+func _calc_stride(vel: float) -> float:
+	return pow(vel * STRIDE_VEL_SCALE, STRIDE_EXP)
+
+func _calc_forward_offset(stride: float, total_len: float, phase_rad: float, vel: float) -> float:
+	var offset = stride * (total_len / FORWARD_OFFSET_DIV) * sin(phase_rad)
+	offset -= (vel * FORWARD_OFFSET_VEL_SCALE) * FORWARD_OFFSET_MULT
+	return offset
+
+func _calc_vertical_offset(stride: float, total_len: float, phase_rad: float) -> float:
+	return stride * (total_len / VERTICAL_OFFSET_DIV) * (-cos(phase_rad) + VERTICAL_OFFSET_SHIFT)
+
+func _solve_leg_ik(hip: Vector2, foot: Vector2, max_reach: float, facing_rad: float) -> void:
+	var c_raw: float = hip.distance_to(foot)
 	var c: float = min(c_raw, max_reach)
-	var alpha: float = hip_position.angle_to_point(foot_target) # radians
-	
-	## Foot position
-	foot_position = hip_position + lengthdir(c, alpha)
-	
-	## Law of Cosines for thigh angle
+	var alpha: float = hip.angle_to_point(foot)
+	foot_position = hip + lengthdir(c, alpha)
+
 	var cos_beta: float = clamp(
 		(pow(thigh_length, 2) + pow(c, 2) - pow(calf_length, 2)) / (2.0 * thigh_length * c),
 		-1.0, 1.0
 	)
 	var beta: float = acos(cos_beta)
-	
-	## Flat Knee position (basic 2D triangle)
-	var knee_flat: Vector2 = hip_position + lengthdir(thigh_length, alpha - beta)
-	
-	## Intersection point along hip→foot line (for foreshortening)
-	var ix: Vector2 = hip_position + lengthdir(thigh_length * cos(beta), alpha)
-	
-	## Vector from intersection to flat knee
+
+	var knee_flat: Vector2 = hip + lengthdir(thigh_length, alpha - beta)
+	var ix: Vector2 = hip + lengthdir(thigh_length * cos(beta), alpha)
 	var knee_vec: Vector2 = knee_flat - ix
 	var knee_vec_len := knee_vec.length()
-	var knee_vec_dir := knee_vec / knee_vec_len if (knee_vec_len > 1e-6) else Vector2.ZERO
-	
-	## Bend offset ALONG knee_vec, signed by knee_mod
-	var knee_mod: float = cos(facing_rad) # near 0 for up/down (90/270), ±1 for left/right (0/180)
+	var knee_vec_dir := knee_vec / knee_vec_len if (knee_vec_len > KNEE_VEC_MIN_LEN) else Vector2.ZERO
+	var knee_mod: float = cos(facing_rad)
 	var bend_offset: Vector2 = knee_vec_dir * (knee_vec_len * knee_mod * bend_strength)
-	
-	## Blend between flat knee and bent knee using foreshorten_strength
 	knee_position = ix + knee_vec * (1.0 - foreshorten_strength) + bend_offset * foreshorten_strength
 	
-	
-	queue_redraw()
-	
-# DRAWING (local space relative to node)
+
+# --- Drawing (local space relative to node) ---
 func _draw() -> void:
-	# Bones
-	draw_line(to_local(hip_position), to_local(knee_position), Color(1, 1, 1), 3.0)
-	draw_line(to_local(knee_position), to_local(foot_position), Color(1, 1, 1), 1.5)
-	
+	_draw_bones()
 	if not debug_draw:
 		return
+	_draw_joints_and_target()
+	if debug_labels:
+		_draw_labels()
 
-	# Joints
-	#draw_circle(to_local(hip_position), 3.0, Color.GREEN)
-	#draw_circle(to_local(knee_position), 3.0, Color.hex(0xffaa00ff))
-	#draw_circle(to_local(foot_position), 3.0, Color.hex(0x55aaffff))
+func _draw_bones() -> void:
+	draw_line(to_local(hip_position), to_local(knee_position), Color(1, 1, 1), BONE_WIDTH)
+	draw_line(to_local(knee_position), to_local(foot_position), Color(1, 1, 1), CALF_WIDTH)
 
-	# Target
-	draw_circle(to_local(foot_target), 2.0, Color.hex(0xff5555ff))
+func _draw_joints_and_target() -> void:
+	#draw_circle(to_local(hip_position), HIP_RADIUS, Color.GREEN)
+	#draw_circle(to_local(knee_position), KNEE_RADIUS, Color.hex(0xffaa00ff))
+	draw_circle(to_local(foot_position), FOOT_RADIUS, FOOT_COLOR)
+	draw_circle(to_local(foot_target), TARGET_RADIUS, TARGET_COLOR)
 	#draw_line(to_local(hip_position), to_local(foot_target), Color(0.3, 0.3, 0.3), 1.0)
 
-	if debug_labels:
-		_draw_label(to_local(hip_position) + Vector2(6, -6), "HIP")
-		_draw_label(to_local(knee_position) + Vector2(6, -6), "KNEE")
-		_draw_label(to_local(foot_position) + Vector2(6, -6), "FOOT")
-		_draw_label(to_local(foot_target) + Vector2(6, -6), "TARGET")
+func _draw_labels() -> void:
+	_draw_label(to_local(hip_position) + Vector2(6, -6), "HIP")
+	_draw_label(to_local(knee_position) + Vector2(6, -6), "KNEE")
+	_draw_label(to_local(foot_position) + Vector2(6, -6), "FOOT")
+	_draw_label(to_local(foot_target) + Vector2(6, -6), "TARGET")
 
 func _draw_label(pos: Vector2, text: String) -> void:
 	draw_string(ThemeDB.fallback_font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12.0, Color.WHITE)
