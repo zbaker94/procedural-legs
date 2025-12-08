@@ -13,6 +13,7 @@ extends Node2D
 @export var foot_sway_amount: float = 0.4   # fraction of stride applied as lateral swing
 @export_range(0.0, 1.0, 0.05) var sway_follow_movement: float = 0.5 # blend between facing and movement when swaying
 
+@export var step_length_factor: float = 0.5  # scales stride amplitude with speed
 
 # Facing and motion (driven by parent CharacterBody2D)
 @export_range(0.0, 360.0, 0.1) var facing_direction_degrees: float = 90.0
@@ -67,7 +68,8 @@ func _physics_process(_delta: float) -> void:
 	var phase_rad: float = deg_to_rad(motion_counter_degrees + phase_offset_degrees)
 	
 	## Horizontal oscillation (sine)
-	var forward_offset: float = stride * (total_len / 4.0) * sin(phase_rad)
+	var forward_scale: float = 1.0 + leg_speed * step_length_factor
+	var forward_offset: float = stride * (total_len / 4.0) * sin(phase_rad) * forward_scale
 	forward_offset -= (leg_speed * 1.25) * 2.0
 	
 	## Vertical oscillation (cosine)
