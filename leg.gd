@@ -40,10 +40,16 @@ var TARGET_COLOR := Color.hex(0xff5555ff)
 @export var thigh_length: float = 20.0
 @export var calf_length: float = 15.0
 
+
 # Animation shaping
 @export_group("Animation Shaping")
 @export_range(0.0, 360.0, 0.01) var phase_offset_degrees: float = 0.0
 @export_range(0.1, 0.9, 0.1) var gait_factor: float = 0.4
+
+# Stride amplitude scaling
+# The X-axis of this curve is velocity (leg_speed), Y-axis is stride amplitude multiplier (0 to max)
+# Set the rightmost X value to the velocity where stride amplitude should cap.
+@export var stride_amplitude_curve: Curve
 
 # Foreshortening strength
 @export_subgroup("Foreshorten + Bend")
@@ -89,8 +95,13 @@ func _physics_process(_delta: float) -> void:
 	var stride: float = _calc_stride(leg_speed)
 	var phase_rad: float = deg_to_rad(motion_counter_degrees + phase_offset_degrees)
 
-	var forward_offset: float = _calc_forward_offset(stride, total_len, phase_rad, leg_speed)
-	var vertical_offset: float = _calc_vertical_offset(stride, total_len, phase_rad)
+	# Sample stride amplitude from curve using current velocity
+	var stride_amplitude := 1.0
+	if stride_amplitude_curve:
+		stride_amplitude = stride_amplitude_curve.sample(leg_speed)
+
+	var forward_offset: float = _calc_forward_offset(stride, total_len, phase_rad) * stride_amplitude
+	var vertical_offset: float = _calc_vertical_offset(stride, total_len, phase_rad) * stride_amplitude
 
 	foot_target = hip_position + Vector2(0, max_reach)
 	foot_target += lengthdir(forward_offset, move_rad)
@@ -111,12 +122,13 @@ func _update_motion_counter() -> void:
 func _calc_stride(vel: float) -> float:
 	return pow(vel * STRIDE_VEL_SCALE, STRIDE_EXP)
 
-func _calc_forward_offset(stride: float, total_len: float, phase_rad: float, vel: float) -> float:
+func _calc_forward_offset(stride: float, total_len: float, phase_rad: float) -> float:
+	# Amplitude is handled by stride_amplitude_curve
 	var offset = stride * (total_len / FORWARD_OFFSET_DIV) * sin(phase_rad)
-	offset -= (vel * FORWARD_OFFSET_VEL_SCALE) * FORWARD_OFFSET_MULT
 	return offset
 
 func _calc_vertical_offset(stride: float, total_len: float, phase_rad: float) -> float:
+	# Amplitude is handled by stride_amplitude_curve
 	return stride * (total_len / VERTICAL_OFFSET_DIV) * (-cos(phase_rad) + VERTICAL_OFFSET_SHIFT)
 
 func _solve_leg_ik(hip: Vector2, foot: Vector2, max_reach: float, facing_rad: float) -> void:

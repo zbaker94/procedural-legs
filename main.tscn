@@ -1,6 +1,11 @@
-[gd_scene load_steps=2 format=3 uid="uid://c1n2te115lon5"]
+[gd_scene load_steps=3 format=3 uid="uid://c1n2te115lon5"]
 
 [ext_resource type="Script" uid="uid://brvr03nxsa5nd" path="res://leg.gd" id="1_ig7tw"]
+
+[sub_resource type="Curve" id="Curve_ig7tw"]
+_limits = [0.0, 1.0, 0.0, 3.0]
+_data = [Vector2(0, 0), 0.0, 0.33333334, 0, 1, Vector2(3, 1), 0.33333334, 0.0, 1, 0]
+point_count = 2
 
 [node name="Main" type="Node"]
 
@@ -12,15 +17,17 @@ position = Vector2(500, 250)
 [node name="LLeg" type="Node2D" parent="CharacterRoot/Legs"]
 position = Vector2(-8, 0)
 script = ExtResource("1_ig7tw")
-facing_direction_degrees = 149.5
-velocity = Vector2(0.5, 0)
+facing_direction_degrees = 0.0
+velocity = Vector2(0, 1)
 phase_offset_degrees = 180.0
+stride_amplitude_curve = SubResource("Curve_ig7tw")
 
 [node name="RLeg" type="Node2D" parent="CharacterRoot/Legs"]
 position = Vector2(-16, 0)
 script = ExtResource("1_ig7tw")
-facing_direction_degrees = 149.5
-velocity = Vector2(0.5, 0)
+facing_direction_degrees = 0.0
+velocity = Vector2(0, 1)
+stride_amplitude_curve = SubResource("Curve_ig7tw")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(506, 290)
