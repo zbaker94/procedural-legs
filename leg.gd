@@ -46,10 +46,17 @@ var TARGET_COLOR := Color.hex(0xff5555ff)
 @export_range(0.0, 360.0, 0.01) var phase_offset_degrees: float = 0.0
 @export_range(0.1, 0.9, 0.1) var gait_factor: float = 0.4
 
+
 # Stride amplitude scaling
 # The X-axis of this curve is velocity (leg_speed), Y-axis is stride amplitude multiplier (0 to max)
 # Set the rightmost X value to the velocity where stride amplitude should cap.
 @export var stride_amplitude_curve: Curve
+
+# Step length and height shaping
+# The X-axis of these curves is velocity (leg_speed), Y-axis is the multiplier for horizontal (length) and vertical (height) step characteristics.
+# At low speeds, you can set step_length_curve Y low (short steps) and step_height_curve Y high (high knees), etc.
+@export var step_length_curve: Curve
+@export var step_height_curve: Curve
 
 # Foreshortening strength
 @export_subgroup("Foreshorten + Bend")
@@ -81,6 +88,7 @@ func lengthdir(length: float, angle_rad: float) -> Vector2:
 
 
 # --- Main Update Loop ---
+
 func _physics_process(_delta: float) -> void:
 	hip_position = global_position # always global
 	leg_speed = velocity.length()
@@ -95,13 +103,23 @@ func _physics_process(_delta: float) -> void:
 	var stride: float = _calc_stride(leg_speed)
 	var phase_rad: float = deg_to_rad(motion_counter_degrees + phase_offset_degrees)
 
-	# Sample stride amplitude from curve using current velocity
+	# Sample stride amplitude, step length, and step height from curves using current velocity
+	# Stride amplitude is overall scale; step length/height are normalized [0,1] for shape only
 	var stride_amplitude := 1.0
 	if stride_amplitude_curve:
 		stride_amplitude = stride_amplitude_curve.sample(leg_speed)
 
-	var forward_offset: float = _calc_forward_offset(stride, total_len, phase_rad) * stride_amplitude
-	var vertical_offset: float = _calc_vertical_offset(stride, total_len, phase_rad) * stride_amplitude
+	var step_length_shape := 1.0
+	if step_length_curve:
+		step_length_shape = step_length_curve.sample(leg_speed)
+
+	var step_height_shape := 1.0
+	if step_height_curve:
+		step_height_shape = step_height_curve.sample(leg_speed)
+	var forward_offset: float = _calc_forward_offset(stride, total_len, phase_rad) * stride_amplitude * step_length_shape
+	var vertical_offset: float = _calc_vertical_offset(stride, total_len, phase_rad) * stride_amplitude * step_height_shape
+
+	print("FO: ", step_length_shape, " VO: ", step_height_shape)
 
 	foot_target = hip_position + Vector2(0, max_reach)
 	foot_target += lengthdir(forward_offset, move_rad)
