@@ -91,6 +91,11 @@ func lengthdir(length: float, angle_rad: float) -> Vector2:
 
 func _physics_process(_delta: float) -> void:
 	hip_position = global_position # always global
+	
+	# limit velocity for stability
+	var max_velocity_length := 3.0
+	if velocity.length() > max_velocity_length:
+		velocity = velocity.normalized() * max_velocity_length
 	leg_speed = velocity.length()
 	_update_motion_counter()
 

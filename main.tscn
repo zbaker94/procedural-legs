@@ -3,8 +3,8 @@
 [ext_resource type="Script" uid="uid://brvr03nxsa5nd" path="res://leg.gd" id="1_ig7tw"]
 
 [sub_resource type="Curve" id="Curve_ig7tw"]
-_limits = [0.0, 1.0, 0.0, 3.0]
-_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.08080809, 0.2500711), 0.86312026, 0.86312026, 0, 0, Vector2(0.7676768, 0.44955957), 0.09781129, 0.09781129, 0, 0, Vector2(1.5151515, 0.5031259), 0.10070803, 0.10070803, 0, 0, Vector2(3, 1), 0.92838895, 0.0, 0, 0]
+_limits = [0.0, 0.9630577, 0.0, 3.0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.08080809, 0.2500711), 0.86312026, 0.86312026, 0, 0, Vector2(0.7676768, 0.44955957), 0.09781129, 0.09781129, 0, 0, Vector2(1.5151515, 0.5031259), 0.10070803, 0.10070803, 0, 0, Vector2(3, 0.9630577), 0.6400257, 0.0, 0, 0]
 point_count = 5
 
 [sub_resource type="Curve" id="Curve_0xm2m"]
@@ -28,7 +28,7 @@ position = Vector2(500, 250)
 position = Vector2(-8, 0)
 script = ExtResource("1_ig7tw")
 facing_direction_degrees = 0.0
-velocity = Vector2(1.72, 0)
+velocity = Vector2(0, 0.82)
 phase_offset_degrees = 180.0
 stride_amplitude_curve = SubResource("Curve_ig7tw")
 step_length_curve = SubResource("Curve_0xm2m")
@@ -38,7 +38,7 @@ step_height_curve = SubResource("Curve_h2yge")
 position = Vector2(-16, 0)
 script = ExtResource("1_ig7tw")
 facing_direction_degrees = 0.0
-velocity = Vector2(1.72, 0)
+velocity = Vector2(0, 0.82)
 stride_amplitude_curve = SubResource("Curve_ig7tw")
 step_length_curve = SubResource("Curve_0xm2m")
 step_height_curve = SubResource("Curve_h2yge")
