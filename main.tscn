@@ -1,48 +1,93 @@
-[gd_scene load_steps=5 format=3 uid="uid://c1n2te115lon5"]
+[gd_scene load_steps=13 format=3 uid="uid://c1n2te115lon5"]
 
+[ext_resource type="Script" uid="uid://cn87a6rtmvnpi" path="res://character_bus.gd" id="1_1bvp3"]
+[ext_resource type="Script" uid="uid://b2e8141p0hqby" path="res://character_locomotion.gd" id="1_7mycd"]
+[ext_resource type="Script" uid="uid://dqlxte3sqa0y" path="res://character_root.gd" id="1_h2yge"]
 [ext_resource type="Script" uid="uid://brvr03nxsa5nd" path="res://leg.gd" id="1_ig7tw"]
+[ext_resource type="Script" uid="uid://bdxkaqcgbrkce" path="res://character_facing.gd" id="1_lquwl"]
+[ext_resource type="Script" uid="uid://doqngkyrl1o8n" path="res://legs_root.gd" id="2_1bvp3"]
+[ext_resource type="Script" uid="uid://7vew8lfqljms" path="res://torso.gd" id="7_272bh"]
+[ext_resource type="Script" uid="uid://c14qgam1c101g" path="res://hip.gd" id="8_5vw27"]
 
 [sub_resource type="Curve" id="Curve_ig7tw"]
-_limits = [0.0, 0.9630577, 0.0, 3.0]
-_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.08080809, 0.2500711), 0.86312026, 0.86312026, 0, 0, Vector2(0.7676768, 0.44955957), 0.09781129, 0.09781129, 0, 0, Vector2(1.5151515, 0.5031259), 0.10070803, 0.10070803, 0, 0, Vector2(3, 0.9630577), 0.6400257, 0.0, 0, 0]
-point_count = 5
+_limits = [0.0, 0.9630577, 0.0, 2.5]
+_data = [Vector2(0, 0.47498035), 0.0, 0.19523093, 0, 1, Vector2(2.5, 0.9630577), 0.19523093, 0.0, 1, 0]
+point_count = 2
 
 [sub_resource type="Curve" id="Curve_0xm2m"]
-_limits = [1.15, 2.0, 0.0, 3.0]
-_data = [Vector2(0, 1.5179952), 0.0, 0.0, 0, 0, Vector2(0.7828282, 1.7205315), 0.06074468, 0.06074468, 0, 0, Vector2(1.4747474, 2), 0.01967511, 0.01967511, 0, 0, Vector2(3, 1.1521741), 0.0, 0.0, 0, 0]
-point_count = 4
+_limits = [0.5, 1.5, 0.0, 1.0]
+_data = [Vector2(0, 1.4961469), 0.0, 0.0, 0, 0]
+point_count = 1
 
 [sub_resource type="Curve" id="Curve_h2yge"]
-_limits = [0.79866445, 1.0, 0.0, 3.0]
-_data = [Vector2(0, 0.79866445), 0.0, 0.0, 0, 0, Vector2(3, 1), -0.0024818068, 0.0, 0, 0]
-point_count = 2
+_limits = [0.79866445, 1.8, 0.0, 1.0]
+_data = [Vector2(0, 1.8), 0.0, -8572.019, 0, 1]
+point_count = 1
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_h2yge"]
+height = 68.0
 
 [node name="Main" type="Node"]
 
-[node name="CharacterRoot" type="Node2D" parent="."]
-position = Vector2(500, 250)
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(1, 31)
 
-[node name="Legs" type="Node2D" parent="CharacterRoot"]
+[node name="CharacterLocomotion" type="CharacterBody2D" parent="."]
+script = ExtResource("1_7mycd")
+acceleration = 5.0
+friction = 2.0
 
-[node name="LLeg" type="Node2D" parent="CharacterRoot/Legs"]
+[node name="CharacterFacing" type="Node" parent="CharacterLocomotion" node_paths=PackedStringArray("character_body")]
+script = ExtResource("1_lquwl")
+character_body = NodePath("..")
+
+[node name="CharacterBus" type="Node" parent="CharacterLocomotion" node_paths=PackedStringArray("character_body", "character_facing")]
+script = ExtResource("1_1bvp3")
+character_body = NodePath("..")
+character_facing = NodePath("../CharacterFacing")
+
+[node name="CharacterRoot" type="Node2D" parent="CharacterLocomotion" node_paths=PackedStringArray("character_bus")]
+position = Vector2(0, -35)
+script = ExtResource("1_h2yge")
+character_bus = NodePath("../CharacterBus")
+
+[node name="Legs" type="Node2D" parent="CharacterLocomotion/CharacterRoot"]
+script = ExtResource("2_1bvp3")
+
+[node name="LLeg" type="Node2D" parent="CharacterLocomotion/CharacterRoot/Legs" node_paths=PackedStringArray("hip")]
 position = Vector2(-8, 0)
 script = ExtResource("1_ig7tw")
-facing_direction_degrees = 0.0
-velocity = Vector2(0, 0.82)
+hip = NodePath("../../LHip")
 phase_offset_degrees = 180.0
 stride_amplitude_curve = SubResource("Curve_ig7tw")
 step_length_curve = SubResource("Curve_0xm2m")
 step_height_curve = SubResource("Curve_h2yge")
 
-[node name="RLeg" type="Node2D" parent="CharacterRoot/Legs"]
-position = Vector2(-16, 0)
+[node name="RLeg" type="Node2D" parent="CharacterLocomotion/CharacterRoot/Legs" node_paths=PackedStringArray("hip")]
+position = Vector2(8, 0)
 script = ExtResource("1_ig7tw")
-facing_direction_degrees = 0.0
-velocity = Vector2(0, 0.82)
+hip = NodePath("../../RHip")
 stride_amplitude_curve = SubResource("Curve_ig7tw")
 step_length_curve = SubResource("Curve_0xm2m")
 step_height_curve = SubResource("Curve_h2yge")
 
-[node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(506, 290)
-zoom = Vector2(3, 3)
+[node name="Torso" type="Node2D" parent="CharacterLocomotion/CharacterRoot" node_paths=PackedStringArray("character_root")]
+script = ExtResource("7_272bh")
+character_root = NodePath("..")
+min_x_scale = 0.3
+torso_width = 19.0
+torso_height = 30.0
+
+[node name="LHip" type="Node2D" parent="CharacterLocomotion/CharacterRoot" node_paths=PackedStringArray("character_root")]
+position = Vector2(-8, 0)
+script = ExtResource("8_5vw27")
+character_root = NodePath("..")
+
+[node name="RHip" type="Node2D" parent="CharacterLocomotion/CharacterRoot" node_paths=PackedStringArray("character_root")]
+position = Vector2(8, 0)
+script = ExtResource("8_5vw27")
+character_root = NodePath("..")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterLocomotion"]
+position = Vector2(0, -34)
+shape = SubResource("CapsuleShape2D_h2yge")

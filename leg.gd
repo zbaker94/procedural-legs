@@ -1,10 +1,8 @@
+class_name Leg
+
 extends Node2D
 
 # --- Constants ---
-const MOTION_COUNTER_SPEED = 5.2
-const MOTION_COUNTER_VEL_SCALE = 3.0
-const MOTION_COUNTER_EXP = 0.4
-const MOTION_COUNTER_MAX = 360.0
 
 const STRIDE_VEL_SCALE = 2.0
 const STRIDE_EXP = 0.4
@@ -32,8 +30,8 @@ var TARGET_COLOR := Color.hex(0xff5555ff)
 
 
 # Facing and motion (driven by parent CharacterBody2D)
-@export_range(0.0, 360.0, 0.1) var facing_direction_degrees: float = 90.0
-@export var velocity: Vector2 = Vector2.ZERO
+
+@export var hip: Hip
 
 # Lengths
 @export_group("Bone Lengths")
@@ -76,34 +74,46 @@ var knee_position: Vector2
 var foot_position: Vector2
 var foot_target: Vector2
 
-var leg_speed: float = 0.0
-var motion_counter_degrees: float = 0.0
+
 var moving_direction_radians: float = 0.0
 
+
+var legs_root:LegsRoot
 
 
 ## HELPERS
 func lengthdir(length: float, angle_rad: float) -> Vector2:
 	return Vector2.RIGHT.rotated(angle_rad) * length
 
+# --- Startup Validation ---
+func _ready():
+	var parent = get_parent()
+	if parent == null or not parent is LegsRoot:
+		push_error("Leg must be a child of LegsRoot.")
+	else:
+		legs_root = parent
+
 
 # --- Main Update Loop ---
 
 func _physics_process(_delta: float) -> void:
-	hip_position = global_position # always global
-	
+	hip_position = hip.global_position # always global
+
+	var facing_direction_degrees := legs_root.character_root.facing_degrees
+	var velocity := legs_root.character_root.velocity
+	var motion_counter_degrees := legs_root.character_root.motion_counter_degrees
+	var leg_speed := legs_root.character_root.leg_speed
+
 	# limit velocity for stability
-	var max_velocity_length := 3.0
+	var max_velocity_length := 1.0
 	if velocity.length() > max_velocity_length:
 		velocity = velocity.normalized() * max_velocity_length
-	leg_speed = velocity.length()
-	_update_motion_counter()
 
 	var total_len: float = thigh_length + calf_length
 	var max_reach: float = total_len
 
 	var facing_rad: float = deg_to_rad(facing_direction_degrees)
-	var move_rad: float = velocity.angle() if leg_speed > 0.001 else facing_rad
+	var move_rad: float = velocity.angle() if leg_speed > 0.0001 else facing_rad
 
 	var stride: float = _calc_stride(leg_speed)
 	var phase_rad: float = deg_to_rad(motion_counter_degrees + phase_offset_degrees)
@@ -124,8 +134,6 @@ func _physics_process(_delta: float) -> void:
 	var forward_offset: float = _calc_forward_offset(stride, total_len, phase_rad) * stride_amplitude * step_length_shape
 	var vertical_offset: float = _calc_vertical_offset(stride, total_len, phase_rad) * stride_amplitude * step_height_shape
 
-	print("FO: ", step_length_shape, " VO: ", step_height_shape)
-
 	foot_target = hip_position + Vector2(0, max_reach)
 	foot_target += lengthdir(forward_offset, move_rad)
 	foot_target.y += vertical_offset
@@ -138,9 +146,7 @@ func _physics_process(_delta: float) -> void:
 	queue_redraw()
 
 # --- Private Calculation Helpers ---
-func _update_motion_counter() -> void:
-	motion_counter_degrees += MOTION_COUNTER_SPEED * pow(leg_speed * MOTION_COUNTER_VEL_SCALE, MOTION_COUNTER_EXP)
-	motion_counter_degrees = fmod(motion_counter_degrees, MOTION_COUNTER_MAX)
+
 
 func _calc_stride(vel: float) -> float:
 	return pow(vel * STRIDE_VEL_SCALE, STRIDE_EXP)
@@ -192,10 +198,10 @@ func _draw_bones() -> void:
 func _draw_joints_and_target() -> void:
 	#draw_circle(to_local(hip_position), HIP_RADIUS, Color.GREEN)
 	#draw_circle(to_local(knee_position), KNEE_RADIUS, Color.hex(0xffaa00ff))
-	draw_circle(to_local(foot_position), FOOT_RADIUS, FOOT_COLOR)
-	draw_circle(to_local(foot_target), TARGET_RADIUS, TARGET_COLOR)
+	# draw_circle(to_local(foot_position), FOOT_RADIUS, FOOT_COLOR)
+	# draw_circle(to_local(foot_target), TARGET_RADIUS, TARGET_COLOR)
 	#draw_line(to_local(hip_position), to_local(foot_target), Color(0.3, 0.3, 0.3), 1.0)
-
+	pass
 func _draw_labels() -> void:
 	_draw_label(to_local(hip_position) + Vector2(6, -6), "HIP")
 	_draw_label(to_local(knee_position) + Vector2(6, -6), "KNEE")
