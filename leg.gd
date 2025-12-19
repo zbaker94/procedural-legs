@@ -81,11 +81,17 @@ var moving_direction_radians: float = 0.0
 @export_group("Sprites")
 @export var thigh_sprite: Texture2D
 @export var calf_sprite: Texture2D
-
 # Orientation: "left-right" or "top-bottom"
 enum SpriteOrientation { LEFT_RIGHT, TOP_BOTTOM }
 @export var thigh_orientation: SpriteOrientation = SpriteOrientation.LEFT_RIGHT
 @export var calf_orientation: SpriteOrientation = SpriteOrientation.LEFT_RIGHT
+
+@export var knee_color: Color
+@export var knee_radius: float = KNEE_RADIUS
+
+@export_subgroup("Offsets")
+@export var thigh_sprite_origin: Vector2 = Vector2.ZERO
+@export var calf_sprite_origin: Vector2 = Vector2.ZERO
 
 
 var legs_root:LegsRoot
@@ -205,7 +211,7 @@ func _draw() -> void:
 	if debug_labels:
 		_draw_labels()
 
-func _draw_bone_sprite(tex: Texture2D, A_global: Vector2, B_global: Vector2, orientation: SpriteOrientation) -> void:
+func _draw_bone_sprite(tex: Texture2D, A_global: Vector2, B_global: Vector2, orientation: SpriteOrientation, origin_offset: Vector2) -> void:
 	if tex == null:
 		return
 
@@ -222,23 +228,33 @@ func _draw_bone_sprite(tex: Texture2D, A_global: Vector2, B_global: Vector2, ori
 
 	var along_x := (orientation == SpriteOrientation.LEFT_RIGHT)
 
+	var pivot_to_end: float = (size.x - origin_offset.x) if along_x else (size.y - origin_offset.y)
+
+	if pivot_to_end <= 0.0001:
+		return		
+	
+	var scale_factor: float = L / pivot_to_end
+
 	var bone_scale: Vector2
 	if along_x:
-		bone_scale = Vector2(L / size.x, 1.0)
+		bone_scale = Vector2(scale_factor, 1.0)
 	else:
-		bone_scale = Vector2(1.0, L / size.y)
+		bone_scale = Vector2(1.0, scale_factor)
 	
 	var rot = angle
 	if not along_x:
 		rot -= PI/2
 
+	# Base offset centers sprite on the bone start
 	var tex_offset = Vector2.ZERO
 	if along_x:
 		tex_offset = Vector2(0, -size.y * 0.5)
 	else:
 		tex_offset = Vector2(-size.x * 0.5, 0)
+	
+	tex_offset += -origin_offset
 
-	# ✅ Build transform in correct order: Scale → Rotate → Translate
+	# ✅ Scale → Rotate → Translate
 	var xform = Transform2D()
 	xform = xform.scaled(bone_scale)
 	xform = xform.rotated(rot)
@@ -253,22 +269,26 @@ func _draw_bone_sprite(tex: Texture2D, A_global: Vector2, B_global: Vector2, ori
 		draw_circle(B, 3, Color.CYAN)
 
 func _draw_leg_sprites() -> void:
+	# Knee
+	draw_circle(to_local(knee_position), knee_radius, knee_color)
 	# --- THIGH ---
 	if thigh_sprite:
 		_draw_bone_sprite(
 			thigh_sprite,
 			hip_position,
 			knee_position,
-			thigh_orientation
+			thigh_orientation,
+			thigh_sprite_origin
 		)
-
+	
 	# --- CALF ---
 	if calf_sprite:
 		_draw_bone_sprite(
 			calf_sprite,
 			knee_position,
 			foot_position,
-			calf_orientation
+			calf_orientation,
+			calf_sprite_origin
 		)
 
 

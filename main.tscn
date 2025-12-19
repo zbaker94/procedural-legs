@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://c1n2te115lon5"]
+[gd_scene load_steps=19 format=3 uid="uid://c1n2te115lon5"]
 
 [ext_resource type="Script" uid="uid://cn87a6rtmvnpi" path="res://character_bus.gd" id="1_1bvp3"]
 [ext_resource type="Script" uid="uid://b2e8141p0hqby" path="res://character_locomotion.gd" id="1_7mycd"]
@@ -6,10 +6,14 @@
 [ext_resource type="Script" uid="uid://brvr03nxsa5nd" path="res://leg.gd" id="1_ig7tw"]
 [ext_resource type="Script" uid="uid://bdxkaqcgbrkce" path="res://character_facing.gd" id="1_lquwl"]
 [ext_resource type="Script" uid="uid://doqngkyrl1o8n" path="res://legs_root.gd" id="2_1bvp3"]
+[ext_resource type="Texture2D" uid="uid://dkjbtalmg1lbi" path="res://head.png" id="5_dg77c"]
+[ext_resource type="Script" uid="uid://groeboi655q3" path="res://head.gd" id="5_ycdy4"]
 [ext_resource type="Texture2D" uid="uid://dridd6c5o8yjj" path="res://thigh.png" id="7_4c57u"]
 [ext_resource type="Script" uid="uid://7vew8lfqljms" path="res://torso.gd" id="7_272bh"]
 [ext_resource type="Script" uid="uid://c14qgam1c101g" path="res://hip.gd" id="8_5vw27"]
 [ext_resource type="Texture2D" uid="uid://431tu2lcptoj" path="res://calf.png" id="8_efxa6"]
+[ext_resource type="Texture2D" uid="uid://dbkphry7gadsf" path="res://torso.png" id="10_efxa6"]
+[ext_resource type="Texture2D" uid="uid://ciy61j4v5pat0" path="res://belly.png" id="13_w48qg"]
 
 [sub_resource type="Curve" id="Curve_ig7tw"]
 _limits = [0.0, 0.9630577, 0.0, 2.5]
@@ -54,6 +58,22 @@ position = Vector2(0, -35)
 script = ExtResource("1_h2yge")
 character_bus = NodePath("../CharacterBus")
 
+[node name="Head" type="Node2D" parent="CharacterLocomotion/CharacterRoot" node_paths=PackedStringArray("character_root")]
+script = ExtResource("5_ycdy4")
+character_root = NodePath("..")
+
+[node name="Sprite" type="Sprite2D" parent="CharacterLocomotion/CharacterRoot/Head"]
+position = Vector2(-3.44, -31.28)
+rotation = -0.038397245
+texture = ExtResource("5_dg77c")
+
+[node name="Belly" type="Sprite2D" parent="CharacterLocomotion/CharacterRoot/Head"]
+texture_filter = 1
+position = Vector2(-2.95, -7)
+rotation = 1.5707964
+scale = Vector2(1.07, 0.78)
+texture = ExtResource("13_w48qg")
+
 [node name="Legs" type="Node2D" parent="CharacterLocomotion/CharacterRoot"]
 script = ExtResource("2_1bvp3")
 
@@ -61,7 +81,7 @@ script = ExtResource("2_1bvp3")
 position = Vector2(-2, 0)
 script = ExtResource("1_ig7tw")
 hip = NodePath("../../LHip")
-thigh_length = 18.0
+thigh_length = 16.0
 calf_length = 16.0
 phase_offset_degrees = 180.0
 gait_factor = 0.7
@@ -73,12 +93,15 @@ thigh_sprite = ExtResource("7_4c57u")
 calf_sprite = ExtResource("8_efxa6")
 thigh_orientation = 1
 calf_orientation = 1
+knee_color = Color(0.5019608, 0.60784316, 0.4392157, 1)
+knee_radius = 4.24
+calf_sprite_origin = Vector2(0, 2.98)
 
 [node name="RLeg" type="Node2D" parent="CharacterLocomotion/CharacterRoot/Legs" node_paths=PackedStringArray("hip")]
 position = Vector2(2, 0)
 script = ExtResource("1_ig7tw")
 hip = NodePath("../../RHip")
-thigh_length = 18.0
+thigh_length = 16.0
 calf_length = 16.0
 gait_factor = 0.7
 stride_amplitude_curve = SubResource("Curve_ig7tw")
@@ -89,13 +112,24 @@ thigh_sprite = ExtResource("7_4c57u")
 calf_sprite = ExtResource("8_efxa6")
 thigh_orientation = 1
 calf_orientation = 1
+knee_color = Color(0.5019608, 0.60784316, 0.4392157, 1)
+knee_radius = 4.24
+calf_sprite_origin = Vector2(0, 2.98)
 
 [node name="Torso" type="Node2D" parent="CharacterLocomotion/CharacterRoot" node_paths=PackedStringArray("character_root")]
 script = ExtResource("7_272bh")
 character_root = NodePath("..")
-min_x_scale = 0.3
+min_x_scale = 0.4
+bounce_amplitude = 1.5
+wobble_degrees = 1.1
+debug_draw = false
 torso_width = 19.0
 torso_height = 30.0
+
+[node name="Sprite" type="Sprite2D" parent="CharacterLocomotion/CharacterRoot/Torso"]
+rotation = -0.07679449
+texture = ExtResource("10_efxa6")
+offset = Vector2(-0.22, -8.93)
 
 [node name="LHip" type="Node2D" parent="CharacterLocomotion/CharacterRoot" node_paths=PackedStringArray("character_root")]
 position = Vector2(-6, 0)
