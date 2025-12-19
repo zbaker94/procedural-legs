@@ -160,11 +160,11 @@ func _calc_vertical_offset(stride: float, total_len: float, phase_rad: float) ->
 	# Amplitude is handled by stride_amplitude_curve
 	return stride * (total_len / VERTICAL_OFFSET_DIV) * (-cos(phase_rad) + VERTICAL_OFFSET_SHIFT)
 
-func _solve_leg_ik(hip: Vector2, foot: Vector2, max_reach: float, facing_rad: float) -> void:
-	var c_raw: float = hip.distance_to(foot)
+func _solve_leg_ik(hip_pos: Vector2, foot: Vector2, max_reach: float, facing_rad: float) -> void:
+	var c_raw: float = hip_pos.distance_to(foot)
 	var c: float = min(c_raw, max_reach)
-	var alpha: float = hip.angle_to_point(foot)
-	foot_position = hip + lengthdir(c, alpha)
+	var alpha: float = hip_pos.angle_to_point(foot)
+	foot_position = hip_pos + lengthdir(c, alpha)
 
 	var cos_beta: float = clamp(
 		(pow(thigh_length, 2) + pow(c, 2) - pow(calf_length, 2)) / (2.0 * thigh_length * c),
@@ -172,8 +172,8 @@ func _solve_leg_ik(hip: Vector2, foot: Vector2, max_reach: float, facing_rad: fl
 	)
 	var beta: float = acos(cos_beta)
 
-	var knee_flat: Vector2 = hip + lengthdir(thigh_length, alpha - beta)
-	var ix: Vector2 = hip + lengthdir(thigh_length * cos(beta), alpha)
+	var knee_flat: Vector2 = hip_pos + lengthdir(thigh_length, alpha - beta)
+	var ix: Vector2 = hip_pos + lengthdir(thigh_length * cos(beta), alpha)
 	var knee_vec: Vector2 = knee_flat - ix
 	var knee_vec_len := knee_vec.length()
 	var knee_vec_dir := knee_vec / knee_vec_len if (knee_vec_len > KNEE_VEC_MIN_LEN) else Vector2.ZERO
