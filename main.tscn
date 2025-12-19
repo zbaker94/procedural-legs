@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://c1n2te115lon5"]
+[gd_scene load_steps=15 format=3 uid="uid://c1n2te115lon5"]
 
 [ext_resource type="Script" uid="uid://cn87a6rtmvnpi" path="res://character_bus.gd" id="1_1bvp3"]
 [ext_resource type="Script" uid="uid://b2e8141p0hqby" path="res://character_locomotion.gd" id="1_7mycd"]
@@ -6,8 +6,10 @@
 [ext_resource type="Script" uid="uid://brvr03nxsa5nd" path="res://leg.gd" id="1_ig7tw"]
 [ext_resource type="Script" uid="uid://bdxkaqcgbrkce" path="res://character_facing.gd" id="1_lquwl"]
 [ext_resource type="Script" uid="uid://doqngkyrl1o8n" path="res://legs_root.gd" id="2_1bvp3"]
+[ext_resource type="Texture2D" uid="uid://dridd6c5o8yjj" path="res://thigh.png" id="7_4c57u"]
 [ext_resource type="Script" uid="uid://7vew8lfqljms" path="res://torso.gd" id="7_272bh"]
 [ext_resource type="Script" uid="uid://c14qgam1c101g" path="res://hip.gd" id="8_5vw27"]
+[ext_resource type="Texture2D" uid="uid://431tu2lcptoj" path="res://calf.png" id="8_efxa6"]
 
 [sub_resource type="Curve" id="Curve_ig7tw"]
 _limits = [0.0, 0.9630577, 0.0, 2.5]
@@ -59,27 +61,36 @@ script = ExtResource("2_1bvp3")
 position = Vector2(-2, 0)
 script = ExtResource("1_ig7tw")
 hip = NodePath("../../LHip")
-thigh_length = 8.0
-calf_length = 6.0
+thigh_length = 18.0
+calf_length = 16.0
 phase_offset_degrees = 180.0
 gait_factor = 0.7
 stride_amplitude_curve = SubResource("Curve_ig7tw")
 step_length_curve = SubResource("Curve_0xm2m")
 step_height_curve = SubResource("Curve_h2yge")
+debug_draw = false
+thigh_sprite = ExtResource("7_4c57u")
+calf_sprite = ExtResource("8_efxa6")
+thigh_orientation = 1
+calf_orientation = 1
 
 [node name="RLeg" type="Node2D" parent="CharacterLocomotion/CharacterRoot/Legs" node_paths=PackedStringArray("hip")]
 position = Vector2(2, 0)
 script = ExtResource("1_ig7tw")
 hip = NodePath("../../RHip")
-thigh_length = 8.0
-calf_length = 6.0
+thigh_length = 18.0
+calf_length = 16.0
 gait_factor = 0.7
 stride_amplitude_curve = SubResource("Curve_ig7tw")
 step_length_curve = SubResource("Curve_0xm2m")
 step_height_curve = SubResource("Curve_h2yge")
+debug_draw = false
+thigh_sprite = ExtResource("7_4c57u")
+calf_sprite = ExtResource("8_efxa6")
+thigh_orientation = 1
+calf_orientation = 1
 
 [node name="Torso" type="Node2D" parent="CharacterLocomotion/CharacterRoot" node_paths=PackedStringArray("character_root")]
-visible = false
 script = ExtResource("7_272bh")
 character_root = NodePath("..")
 min_x_scale = 0.3
@@ -87,12 +98,12 @@ torso_width = 19.0
 torso_height = 30.0
 
 [node name="LHip" type="Node2D" parent="CharacterLocomotion/CharacterRoot" node_paths=PackedStringArray("character_root")]
-position = Vector2(-4, 0)
+position = Vector2(-6, 0)
 script = ExtResource("8_5vw27")
 character_root = NodePath("..")
 
 [node name="RHip" type="Node2D" parent="CharacterLocomotion/CharacterRoot" node_paths=PackedStringArray("character_root")]
-position = Vector2(4, 0)
+position = Vector2(6, 0)
 script = ExtResource("8_5vw27")
 character_root = NodePath("..")
 

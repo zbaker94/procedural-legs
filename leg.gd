@@ -77,6 +77,16 @@ var foot_target: Vector2
 
 var moving_direction_radians: float = 0.0
 
+# Sprite support
+@export_group("Sprites")
+@export var thigh_sprite: Texture2D
+@export var calf_sprite: Texture2D
+
+# Orientation: "left-right" or "top-bottom"
+enum SpriteOrientation { LEFT_RIGHT, TOP_BOTTOM }
+@export var thigh_orientation: SpriteOrientation = SpriteOrientation.LEFT_RIGHT
+@export var calf_orientation: SpriteOrientation = SpriteOrientation.LEFT_RIGHT
+
 
 var legs_root:LegsRoot
 
@@ -184,20 +194,91 @@ func _solve_leg_ik(hip_pos: Vector2, foot: Vector2, max_reach: float, facing_rad
 
 # --- Drawing (local space relative to node) ---
 func _draw() -> void:
-	_draw_bones()
+
+	# Draw sprites for thigh and calf if assigned
+	_draw_leg_sprites()
+
+	# Optionally draw debug info
 	if not debug_draw:
-		return
+		pass
 	_draw_joints_and_target()
 	if debug_labels:
 		_draw_labels()
+
+func _draw_bone_sprite(tex: Texture2D, A_global: Vector2, B_global: Vector2, orientation: SpriteOrientation) -> void:
+	if tex == null:
+		return
+
+	var A = to_local(A_global)
+	var B = to_local(B_global)
+
+	var d = B - A
+	var L = d.length()
+	if L < 0.0001:
+		return
+
+	var angle = d.angle()
+	var size = tex.get_size()
+
+	var along_x := (orientation == SpriteOrientation.LEFT_RIGHT)
+
+	var bone_scale: Vector2
+	if along_x:
+		bone_scale = Vector2(L / size.x, 1.0)
+	else:
+		bone_scale = Vector2(1.0, L / size.y)
+	
+	var rot = angle
+	if not along_x:
+		rot -= PI/2
+
+	var tex_offset = Vector2.ZERO
+	if along_x:
+		tex_offset = Vector2(0, -size.y * 0.5)
+	else:
+		tex_offset = Vector2(-size.x * 0.5, 0)
+
+	# ✅ Build transform in correct order: Scale → Rotate → Translate
+	var xform = Transform2D()
+	xform = xform.scaled(bone_scale)
+	xform = xform.rotated(rot)
+	xform = xform.translated(A)
+
+	draw_set_transform_matrix(xform)
+	draw_texture(tex, tex_offset)
+	draw_set_transform_matrix(Transform2D.IDENTITY)
+
+	if debug_draw:
+		draw_circle(A, 3, Color.YELLOW)
+		draw_circle(B, 3, Color.CYAN)
+
+func _draw_leg_sprites() -> void:
+	# --- THIGH ---
+	if thigh_sprite:
+		_draw_bone_sprite(
+			thigh_sprite,
+			hip_position,
+			knee_position,
+			thigh_orientation
+		)
+
+	# --- CALF ---
+	if calf_sprite:
+		_draw_bone_sprite(
+			calf_sprite,
+			knee_position,
+			foot_position,
+			calf_orientation
+		)
+
 
 func _draw_bones() -> void:
 	draw_line(to_local(hip_position), to_local(knee_position), Color(1, 1, 1), BONE_WIDTH)
 	draw_line(to_local(knee_position), to_local(foot_position), Color(1, 1, 1), CALF_WIDTH)
 
 func _draw_joints_and_target() -> void:
-	#draw_circle(to_local(hip_position), HIP_RADIUS, Color.GREEN)
-	#draw_circle(to_local(knee_position), KNEE_RADIUS, Color.hex(0xffaa00ff))
+	# draw_circle(to_local(hip_position), HIP_RADIUS, Color.GREEN)
+	# draw_circle(to_local(knee_position), KNEE_RADIUS, Color.hex(0xffaa00ff))
 	# draw_circle(to_local(foot_position), FOOT_RADIUS, FOOT_COLOR)
 	# draw_circle(to_local(foot_target), TARGET_RADIUS, TARGET_COLOR)
 	#draw_line(to_local(hip_position), to_local(foot_target), Color(0.3, 0.3, 0.3), 1.0)
